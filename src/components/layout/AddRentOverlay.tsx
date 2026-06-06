@@ -782,7 +782,7 @@ export default function AddRentOverlay({
                   <div className="flex flex-wrap gap-2">
                     {photos.map((file, i) => (
                       <div key={i} className="group relative h-16 w-16 overflow-hidden rounded-xl ring-2 ring-gray-200">
-                        <img src={URL.createObjectURL(file)} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+                        <img src={URL.createObjectURL(file)} alt={`Property photo ${i + 1} — ${title || 'New listing on BasaKoi'}`} className="h-full w-full object-cover" />
                         <button
                           onClick={() => removePhoto(i)}
                           className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"

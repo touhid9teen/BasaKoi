@@ -24,6 +24,49 @@ async function wsBroadcast(msg: object) {
 }
 
 /**
+ * GET /api/properties/:id
+ *
+ * Return a single property by ID.
+ */
+export async function GET(
+  _request: NextRequest,
+  { params }: RouteParams
+) {
+  try {
+    const { id } = await params;
+    const sql = getSql();
+
+    const rows = (await sql`
+      SELECT
+        id, title, accommodation_type, rent_amount, service_charge,
+        service_charge_included, available_from, tenant_type,
+        lat, lng, address, bachelor_allowed, gas_type,
+        lift_available, bedrooms, bathroom, description,
+        phone, special_instructions, status, user_id, created_at
+      FROM properties
+      WHERE id = ${id}
+    `) as SqlRow[];
+
+    const property = rows[0] as Record<string, unknown> | undefined;
+
+    if (!property) {
+      return NextResponse.json(
+        { error: "Property not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ property });
+  } catch (error) {
+    console.error("Error fetching property:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch property" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * PATCH /api/properties/:id
  * Body: { status: "rented_out" | "available", user_id?: string }
  *
