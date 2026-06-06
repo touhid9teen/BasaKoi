@@ -39,7 +39,7 @@ interface MapContainerProps {
   }) => void;
   onMapClick: (lngLat: GeoLocation) => void;
   onMarkerClick?: (property: Property) => void;
-  isFullscreen?: boolean;
+  markerOpacity?: number;
 }
 
 const MapContainer = forwardRef<MapContainerHandle, MapContainerProps>(
@@ -51,7 +51,7 @@ const MapContainer = forwardRef<MapContainerHandle, MapContainerProps>(
       onBoundsChange,
       onMapClick,
       onMarkerClick,
-      isFullscreen = false,
+      markerOpacity = 1,
     },
     ref
   ) => {
@@ -151,12 +151,12 @@ const MapContainer = forwardRef<MapContainerHandle, MapContainerProps>(
           {/* Navigation controls */}
           <NavigationControl position="bottom-right" />
 
-        {/* Geolocation control */}
-        <GeolocateControl
-          position="bottom-right"
-          onGeolocate={handleGeolocate}
-          trackUserLocation={true}
-        />
+          {/* Geolocation control */}
+          <GeolocateControl
+            position="bottom-right"
+            onGeolocate={handleGeolocate}
+            trackUserLocation={true}
+          />
 
           {/* Crosshair overlay in "add-rent" mode */}
           {mode === "add-rent" && <Crosshair />}
@@ -172,10 +172,11 @@ const MapContainer = forwardRef<MapContainerHandle, MapContainerProps>(
           )}
 
           {/* Property markers in "find-rent" mode */}
-          {mode === "find-rent" && properties.length > 0 && (
+          {(mode === "find-rent" || mode === "add-rent") && properties.length > 0 && (
             <MarkerCluster
               properties={properties}
               onMarkerClick={onMarkerClick}
+              markerOpacity={markerOpacity}
             />
           )}
         </Map>

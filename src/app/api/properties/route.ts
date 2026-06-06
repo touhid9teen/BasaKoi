@@ -23,10 +23,6 @@ async function wsBroadcast(msg: object) {
 /**
  * GET /api/properties
  * Query params: ne_lat, ne_lng, sw_lat, sw_lng, status (optional)
- *
- * Uses PostGIS ST_Within to efficiently find properties within the
- * map's current bounding box. Returns only available properties
- * unless a different status is specified.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -37,25 +33,22 @@ export async function GET(request: NextRequest) {
     const swLng = parseFloat(searchParams.get("sw_lng") || "");
     const status = searchParams.get("status") || "available";
 
-    // Validate bounding box params
     if (!neLat || !neLng || !swLat || !swLng || isNaN(neLat) || isNaN(neLng) || isNaN(swLat) || isNaN(swLng)) {
       return NextResponse.json(
-        {
-          error:
-            "Missing or invalid bounding box parameters. Required: ne_lat, ne_lng, sw_lat, sw_lng",
-        },
+        { error: "Missing or invalid bounding box parameters. Required: ne_lat, ne_lng, sw_lat, sw_lng" },
         { status: 400 }
       );
     }
 
     const sql = getSql();
 
-    // Spatial query using PostGIS
     const rows = (await sql`
       SELECT
-        id, title, rent_amount, lat, lng,
-        address, bachelor_allowed, gas_type,
-        bedrooms, description, status, user_id, created_at
+        id, title, accommodation_type, rent_amount, service_charge,
+        service_charge_included, available_from, tenant_type,
+        lat, lng, address, bachelor_allowed, gas_type,
+        lift_available, bedrooms, bathroom, description,
+        phone, special_instructions, status, user_id, created_at
       FROM properties
       WHERE
         status = ${status} AND
@@ -79,9 +72,6 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/properties
- * Body: { title, rent_amount, lat, lng, bachelor_allowed, gas_type, bedrooms, description }
- *
- * Creates a new property listing. The geom field is auto-populated via DB trigger.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -89,22 +79,38 @@ export async function POST(request: NextRequest) {
 
     const {
       title,
+      accommodation_type,
       rent_amount,
       lat,
       lng,
+      service_charge_included,
+      available_from,
+      tenant_type,
       bachelor_allowed,
       gas_type,
+      lift_available,
       bedrooms,
+      bathroom,
       description,
+      phone,
+      special_instructions,
     } = body as {
       title: string;
+      accommodation_type?: string;
       rent_amount: number;
       lat: number;
       lng: number;
+      service_charge_included?: boolean;
+      available_from?: string;
+      tenant_type?: string;
       bachelor_allowed?: boolean;
       gas_type?: string;
+      lift_available?: boolean;
       bedrooms?: number;
+      bathroom?: number;
       description?: string;
+      phone?: string;
+      special_instructions?: string;
     };
 
     // Validate required fields
@@ -125,20 +131,27 @@ export async function POST(request: NextRequest) {
 
     const sql = getSql();
 
-    // Insert into database (geom is auto-set by trigger)
+    // service_charge_included boolean tracks if rent includes charges
+    const serviceCharge = 0;
+
     const rows = (await sql`
       INSERT INTO properties (
-        title, rent_amount, lat, lng, address,
-        bachelor_allowed, gas_type, bedrooms, description
+        title, accommodation_type, rent_amount, service_charge, service_charge_included,
+        available_from, tenant_type, lat, lng, address, bachelor_allowed, gas_type,
+        lift_available, bedrooms, bathroom, description, phone, special_instructions
       ) VALUES (
-        ${title}, ${rent_amount}, ${lat}, ${lng}, ${null},
-        ${bachelor_allowed ?? false}, ${gas_type ?? "natural"},
-        ${bedrooms ?? 1}, ${description ?? null}
+        ${title}, ${accommodation_type ?? null}, ${rent_amount}, ${serviceCharge},
+        ${service_charge_included ?? false}, ${available_from ?? null}, ${tenant_type ?? null},
+        ${lat}, ${lng}, ${null}, ${bachelor_allowed ?? false}, ${gas_type ?? "natural"},
+        ${lift_available ?? false}, ${bedrooms ?? 1}, ${bathroom ?? 1},
+        ${description ?? null}, ${phone ?? null}, ${special_instructions ?? null}
       )
       RETURNING
-        id, title, rent_amount, lat, lng, address,
-        bachelor_allowed, gas_type, bedrooms, description,
-        status, user_id, created_at
+        id, title, accommodation_type, rent_amount, service_charge,
+        service_charge_included, available_from, tenant_type,
+        lat, lng, address, bachelor_allowed, gas_type,
+        lift_available, bedrooms, bathroom, description,
+        phone, special_instructions, status, user_id, created_at
     `) as SqlRow[];
 
     const property = rows[0] as unknown as Property | undefined;

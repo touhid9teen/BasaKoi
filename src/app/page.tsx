@@ -39,6 +39,7 @@ export default function Home() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [detailProperty, setDetailProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(false);
+  const [markerOpacity, setMarkerOpacity] = useState(1);
 
   const mapRef = useRef<MapContainerHandle>(null);
   const modeRef = useRef(mode);
@@ -110,6 +111,11 @@ export default function Home() {
     }
   }, []);
 
+  // ---------- Marker fade for add-rent step 1 ----------
+  const handleMarkerFade = useCallback((fade: boolean) => {
+    setMarkerOpacity(fade ? 0.5 : 1);
+  }, []);
+
   // ---------- Mode selection ----------
   const handleFindRent = useCallback(() => {
     setMode("find-rent");
@@ -129,9 +135,10 @@ export default function Home() {
   const handleCancelAddRent = useCallback(() => {
     setMode("idle");
     setSelectedLocation(null);
+    setMarkerOpacity(1);
   }, []);
 
-  // ---------- Search location via Nominatim geocoding (returns result, does NOT fly) ----------
+  // ---------- Search location via Nominatim geocoding ----------
   const handleSearchLocation = useCallback(async (query: string): Promise<GeoLocation | null> => {
     try {
       const res = await fetch(
@@ -151,8 +158,8 @@ export default function Home() {
     }
   }, []);
 
-  // ---------- Confirm searched location — fly map to it ----------
-  const handleConfirmLocation = useCallback((location: GeoLocation) => {
+  // ---------- Fly map to searched location ----------
+  const handleFlyToLocation = useCallback((location: GeoLocation) => {
     mapRef.current?.flyTo({ lat: location.lat, lng: location.lng, zoom: 15, duration: 1200 });
   }, []);
 
@@ -162,7 +169,11 @@ export default function Home() {
     const res = await fetch("/api/properties", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, lat: selectedLocation.lat, lng: selectedLocation.lng }),
+      body: JSON.stringify({
+        ...data,
+        lat: selectedLocation.lat,
+        lng: selectedLocation.lng,
+      }),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -170,6 +181,7 @@ export default function Home() {
     }
     setSelectedLocation(null);
     setMode("find-rent");
+    setMarkerOpacity(1);
     lastFetchedBoundsRef.current = null;
     lastFetchTimeRef.current = 0;
     // Trigger fetch immediately
@@ -187,6 +199,7 @@ export default function Home() {
 
   // ---------- Show mode selector if idle ----------
   const showModeSelector = mode === "idle";
+  const showMarkers = mode === "find-rent" || mode === "add-rent";
 
   return (
     <div className="h-full w-full overflow-hidden bg-black">
@@ -200,6 +213,7 @@ export default function Home() {
           onBoundsChange={handleBoundsChange}
           onMapClick={handleMapClick}
           onMarkerClick={handleMarkerClick}
+          markerOpacity={markerOpacity}
         />
       </div>
 
@@ -245,7 +259,8 @@ export default function Home() {
           onCancel={handleCancelAddRent}
           onSubmit={handleSubmitProperty}
           onSearchLocation={handleSearchLocation}
-          onConfirmLocation={handleConfirmLocation}
+          onFlyToLocation={handleFlyToLocation}
+          onMarkerFade={handleMarkerFade}
         />
       )}
 

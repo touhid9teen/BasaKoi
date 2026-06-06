@@ -73,9 +73,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       SET status = ${status}
       WHERE id = ${id}
       RETURNING
-        id, title, rent_amount, lat, lng, address,
-        bachelor_allowed, gas_type, bedrooms, description,
-        status, user_id, created_at
+        id, title, accommodation_type, rent_amount, service_charge,
+        service_charge_included, available_from, tenant_type,
+        lat, lng, address, bachelor_allowed, gas_type,
+        lift_available, bedrooms, bathroom, description,
+        phone, special_instructions, status, user_id, created_at
     `) as SqlRow[];
 
     const property = rows[0] as Record<string, unknown> | undefined;

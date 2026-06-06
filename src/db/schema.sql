@@ -8,15 +8,23 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE IF NOT EXISTS properties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
+  accommodation_type TEXT CHECK (accommodation_type IN ('full_flat', 'sublet_room')),
   rent_amount NUMERIC(10, 2) NOT NULL,
+  service_charge NUMERIC(10, 2) DEFAULT 0,
+  available_from TEXT,
+  tenant_type TEXT CHECK (tenant_type IN ('family', 'bachelor_male', 'bachelor_female', 'any')),
   lat DOUBLE PRECISION NOT NULL,
   lng DOUBLE PRECISION NOT NULL,
   geom GEOMETRY(Point, 4326) NOT NULL,
   address TEXT,
   bachelor_allowed BOOLEAN DEFAULT false,
   gas_type TEXT CHECK (gas_type IN ('natural', 'cylinder', 'none')),
+  lift_available BOOLEAN DEFAULT false,
   bedrooms INTEGER DEFAULT 1,
+  bathroom INTEGER DEFAULT 1,
   description TEXT,
+  phone TEXT,
+  special_instructions TEXT,
   status TEXT DEFAULT 'available' CHECK (status IN ('available', 'rented_out')),
   user_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -51,9 +59,3 @@ CREATE TRIGGER trg_update_geom
   ON properties
   FOR EACH ROW
   EXECUTE FUNCTION update_geom();
-
--- Spatial query example (for reference):
--- SELECT * FROM properties
--- WHERE status = 'available'
---   AND ST_Within(geom, ST_MakeEnvelope(sw_lng, sw_lat, ne_lng, ne_lat, 4326))
--- ORDER BY created_at DESC;
