@@ -67,21 +67,21 @@ function springScale(active: boolean): React.CSSProperties {
 }
 
 const inputBase =
-  "w-full rounded-xl border-2 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all";
+  "w-full rounded-xl border-2 bg-white px-3.5 py-2.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all sm:px-4 sm:py-3 sm:text-sm";
 const inputBorder =
   "border-gray-200 hover:border-gray-300";
 const labelBase =
   "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-600";
 const chipBase =
-  "rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-emerald-500/30";
+  "rounded-xl border-2 px-3 py-2.5 text-xs font-semibold transition-all active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:px-4 sm:py-3 sm:text-sm";
 const chipActive =
   "border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm";
 const chipInactive =
   "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50";
 const btnPrimary =
-  "flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/30 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2";
+  "flex-1 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/30 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2 sm:py-3 sm:text-sm";
 const btnSecondary =
-  "flex-1 rounded-xl border-2 border-gray-200 py-3 text-sm font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300/40 focus:ring-offset-1";
+  "flex-1 rounded-xl border-2 border-gray-200 py-2.5 text-xs font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300/40 focus:ring-offset-1 sm:py-3 sm:text-sm";
 const toggleTrack =
   "relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2";
 const toggleThumb =
@@ -299,10 +299,10 @@ export default function AddRentOverlay({
           <div className="rounded-2xl bg-white px-5 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-black/10">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 sm:text-xs">
                   {STEP_ICONS[1]} Step 1 of 8
                 </p>
-                <h3 className="text-lg font-bold text-gray-900 mt-0.5">
+                <h3 className="text-base font-bold text-gray-900 mt-0.5 sm:text-lg">
                   {STEP_LABELS[1]}
                 </h3>
               </div>
@@ -390,7 +390,7 @@ export default function AddRentOverlay({
             <button
               onClick={() => selectedLocation && setStep(2)}
               disabled={!selectedLocation}
-              className="w-full rounded-xl py-3.5 text-base font-bold transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2"
+              className="w-full rounded-xl py-3 text-sm font-bold transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2 sm:py-3.5 sm:text-base"
             >
               {selectedLocation ? "Set This Building 🏠" : "Click map to drop pin"}
             </button>
@@ -415,15 +415,15 @@ export default function AddRentOverlay({
 
             {/* Step indicator */}
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-base ring-1 ring-emerald-200">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-sm ring-1 ring-emerald-200 sm:h-9 sm:w-9 sm:text-base">
                   {STEP_ICONS[step]}
                 </span>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 sm:text-[11px]">
                     Step {step} of 8
                   </p>
-                  <h3 className="text-base font-bold text-gray-900">
+                  <h3 className="text-sm font-bold text-gray-900 sm:text-base">
                     {STEP_LABELS[step]}
                   </h3>
                 </div>
@@ -535,7 +535,7 @@ export default function AddRentOverlay({
                     value={rentAmount}
                     onChange={(e) => setRentAmount(e.target.value)}
                     placeholder="15000"
-                    className="w-full rounded-2xl border-2 border-gray-200 bg-white py-5 pl-16 pr-5 text-3xl font-black text-gray-900 placeholder:text-gray-300 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all hover:border-gray-300"
+                    className="w-full rounded-2xl border-2 border-gray-200 bg-white py-4 pl-14 pr-4 text-2xl font-black text-gray-900 placeholder:text-gray-300 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all hover:border-gray-300 sm:py-5 sm:pl-16 sm:pr-5 sm:text-3xl"
                     min={1}
                   />
                 </div>
@@ -584,13 +584,13 @@ export default function AddRentOverlay({
                     <button
                       onClick={() => setBedrooms(Math.max(0, bedrooms - 1))}
                       disabled={bedrooms <= 0}
-                      className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-gray-200 bg-white text-2xl font-bold text-gray-700 transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-sm"
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-gray-200 bg-white text-xl font-bold text-gray-700 transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-sm sm:h-14 sm:w-14 sm:text-2xl"
                     >
                       −
                     </button>
                     <span
                       key={bedrooms}
-                      className="min-w-[4rem] text-center text-4xl font-black text-gray-900 animate-in zoom-in-50 duration-200"
+                      className="min-w-[3rem] text-center text-3xl font-black text-gray-900 animate-in zoom-in-50 duration-200 sm:min-w-[4rem] sm:text-4xl"
                     >
                       {bedrooms}
                     </span>
@@ -835,7 +835,7 @@ export default function AddRentOverlay({
                   <button
                     onClick={handleSubmit}
                     disabled={submitting || (phone.length > 0 && !isValidBangladeshiPhone(phone))}
-                    className="flex-1 rounded-xl bg-emerald-600 py-3.5 text-base font-black text-white shadow-lg shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-600/40 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2"
+                    className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-black text-white shadow-lg shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-600/40 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:ring-offset-2 sm:py-3.5 sm:text-base"
                   >
                     {submitting ? (
                       <span className="flex items-center justify-center gap-2">
