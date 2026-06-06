@@ -39,6 +39,8 @@ interface ImportRow {
   phone?: string;
   special_instructions?: string;
   status?: string;
+  image_urls?: string;  // comma-separated URLs or JSON array
+  video_urls?: string;  // comma-separated URLs or JSON array
   [key: string]: unknown;
 }
 
@@ -232,6 +234,33 @@ export async function POST(request: NextRequest) {
           if (broadcastProperty[0]) {
             wsBroadcast({ type: "property-created", property: broadcastProperty[0] });
           }
+
+          // Import media URLs if provided
+          const importMediaUrls = (urlsStr: string | undefined, mediaType: "image" | "video") => {
+            if (!urlsStr) return;
+            try {
+              // Try parsing as JSON array first, then fall back to comma-separated
+              let urls: string[];
+              const trimmed = urlsStr.trim();
+              if (trimmed.startsWith("[")) {
+                urls = JSON.parse(trimmed);
+              } else {
+                urls = trimmed.split(",").map((u) => u.trim()).filter(Boolean);
+              }
+              for (let i = 0; i < Math.min(urls.length, 10); i++) {
+                const url = urls[i];
+                if (url && (url.startsWith("http") || url.startsWith("data:"))) {
+                  sql`
+                    INSERT INTO property_media (property_id, media_type, media_url, sort_order)
+                    VALUES (${insertedProperty!.id}, ${mediaType}, ${url}, ${i})
+                  `.catch(() => {}); // fire-and-forget per media item
+                }
+              }
+            } catch {}
+          };
+
+          importMediaUrls(String(normalizeVal(raw.image_urls) || ""), "image");
+          importMediaUrls(String(normalizeVal(raw.video_urls) || ""), "video");
         }
       } catch (err) {
         result.error = err instanceof Error ? err.message : "Unknown error";

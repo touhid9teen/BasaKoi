@@ -163,6 +163,147 @@ export default function AdminDashboard() {
   const statuses: AdminPropertyStatus[] = ["available", "confirmed", "paid", "rented_out"];
   const tenantTypes = ["family", "bachelor_male", "bachelor_female", "any"];
 
+  // ── MEDIA UPLOAD COMPONENT ──
+  const MediaUploader = ({ propertyId, onMediaChange }: { propertyId: string; onMediaChange?: () => void }) => {
+    const [media, setMedia] = useState<{ id: string; media_type: string; media_url: string; thumbnail_url: string | null; caption: string | null }[]>([]);
+    const [loadingMedia, setLoadingMedia] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [dragOver, setDragOver] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const fetchMedia = useCallback(async () => {
+      setLoadingMedia(true);
+      try {
+        const res = await fetch(`/api/admin/properties/media?property_id=${propertyId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMedia(data.media || []);
+        }
+      } catch {} finally { setLoadingMedia(false); }
+    }, [propertyId]);
+
+    useEffect(() => { fetchMedia(); }, [fetchMedia]);
+
+    const handleUpload = async (file: File, mediaType: "image" | "video", caption?: string) => {
+      setUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("property_id", propertyId);
+        formData.append("media_type", mediaType);
+        if (caption) formData.append("caption", caption);
+        const res = await fetch("/api/admin/properties/media", { method: "POST", body: formData });
+        if (res.ok) {
+          await fetchMedia();
+          onMediaChange?.();
+        }
+      } catch {} finally { setUploading(false); }
+    };
+
+    const handleDelete = async (mediaId: string) => {
+      if (!confirm("Remove this media?")) return;
+      try {
+        await fetch(`/api/admin/properties/media?id=${mediaId}`, { method: "DELETE" });
+        setMedia((m) => m.filter((x) => x.id !== mediaId));
+        onMediaChange?.();
+      } catch {}
+    };
+
+    return (
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-gray-700">Photos & Videos</p>
+
+        {/* Media grid */}
+        {loadingMedia ? (
+          <div className="flex items-center gap-2 py-4 text-sm text-gray-500">
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Loading media...
+          </div>
+        ) : media.length > 0 ? (
+          <div className="flex flex-wrap gap-3">
+            {media.map((m) => (
+              <div key={m.id} className="group relative h-28 w-28 overflow-hidden rounded-xl border border-gray-200 bg-gray-100 sm:h-32 sm:w-32">
+                {m.media_type === "image" ? (
+                  <img src={m.media_url} alt={m.caption || "Property photo"} className="h-full w-full object-cover" />
+                ) : (
+                  <video src={m.media_url} className="h-full w-full object-cover" />
+                )}
+                <button
+                  onClick={() => handleDelete(m.id)}
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500"
+                >
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                {m.caption && (
+                  <p className="absolute bottom-0 left-0 right-0 truncate bg-gradient-to-t from-black/60 to-transparent px-2 pb-1 pt-4 text-[10px] text-white">
+                    {m.caption}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="py-3 text-sm text-gray-400 italic">No photos or videos added yet</p>
+        )}
+
+        {/* Upload dropzone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault(); setDragOver(false);
+            const f = e.dataTransfer.files[0];
+            if (f) {
+              const isVideo = f.type.startsWith("video/");
+              handleUpload(f, isVideo ? "video" : "image");
+            }
+          }}
+          onClick={() => fileInputRef.current?.click()}
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-5 text-center transition-all ${
+            dragOver ? "border-emerald-400 bg-emerald-50/50" : "border-gray-300 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50/30"
+          }`}
+        >
+          {uploading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <svg className="h-5 w-5 animate-spin text-emerald-600" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Uploading...
+            </div>
+          ) : (
+            <>
+              <svg className="mb-2 h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <p className="text-sm font-semibold text-gray-700">Drop photo/video or click to upload</p>
+              <p className="mt-1 text-xs text-gray-400">Supports images (JPEG, PNG, WebP) and videos (MP4, WebM)</p>
+            </>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) {
+                const isVideo = f.type.startsWith("video/");
+                handleUpload(f, isVideo ? "video" : "image");
+              }
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+            className="hidden"
+          />
+        </div>
+      </div>
+    );
+  };
+
   // ── ADD PROPERTY ──
   const AddPropertyForm = () => {
     const [title, setTitle] = useState("");
@@ -217,6 +358,10 @@ export default function AdminDashboard() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to create");
+        if (data.successCount === 0) {
+          const errMsg = data.results?.[0]?.error || "Validation failed — check coordinates and required fields";
+          throw new Error(errMsg);
+        }
         setSuccess(`"${title}" created successfully`);
         setTab("list");
         fetchProperties();
@@ -325,6 +470,18 @@ export default function AdminDashboard() {
             <select value={status} onChange={(e) => setStatus(e.target.value as AdminPropertyStatus)} className={`${inputBase} ${inputBorder}`}>
               {statuses.map((s) => (<option key={s} value={s}>{STATUS_LABELS[s]}</option>))}
             </select>
+          </div>
+          {/* Photos & Videos */}
+          <div className="sm:col-span-2 lg:col-span-3">
+            <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-5">
+              <div className="mb-3 flex items-center gap-2 text-sm text-gray-500">
+                <svg className="h-5 w-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                </svg>
+                Photos & videos can be added after the property is created
+              </div>
+              <p className="text-xs text-gray-400">When the property is created, you&apos;ll be able to upload images and videos from the listings view.</p>
+            </div>
           </div>
           {/* Description */}
           <div className="sm:col-span-2 lg:col-span-3">
@@ -832,6 +989,11 @@ export default function AdminDashboard() {
                       <p className="text-base text-gray-700 whitespace-pre-line">{selectedProperty.special_instructions}</p>
                     </div>
                   )}
+                  <div className="sm:col-span-2 lg:col-span-3">
+                    <div className="border-t border-gray-100 pt-4">
+                      <MediaUploader propertyId={selectedProperty.id} />
+                    </div>
+                  </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Coordinates</p>
                     <p className="text-base text-gray-500 font-mono">{selectedProperty.lat.toFixed(5)}, {selectedProperty.lng.toFixed(5)}</p>
