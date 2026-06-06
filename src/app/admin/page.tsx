@@ -163,6 +163,20 @@ export default function AdminDashboard() {
   const statuses: AdminPropertyStatus[] = ["available", "confirmed", "paid", "rented_out"];
   const tenantTypes = ["family", "bachelor_male", "bachelor_female", "any"];
 
+  // ── Pagination ──
+  const PAGE_SIZE = 25;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(filteredProperties.length / PAGE_SIZE));
+  const paginatedProperties = filteredProperties.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [search, statusFilter, tenantFilter]);
+
+  // Clamp page when totalPages shrinks (e.g., after delete)
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [totalPages, page]);
+
   // ── MEDIA UPLOAD COMPONENT ──
   const MediaUploader = ({ propertyId, onMediaChange }: { propertyId: string; onMediaChange?: () => void }) => {
     const [media, setMedia] = useState<{ id: string; media_type: string; media_url: string; thumbnail_url: string | null; caption: string | null }[]>([]);
@@ -825,7 +839,7 @@ export default function AdminDashboard() {
                 <>
                   {/* Mobile card view */}
                   <div className="block sm:hidden">
-                    {filteredProperties.map((property) => (
+                    {paginatedProperties.map((property) => (
                       <div key={property.id} className={`border-b border-gray-100 p-5 transition-colors ${selectedProperty?.id === property.id ? "bg-emerald-50/50" : "hover:bg-gray-50"}`}>
                         <div className="mb-3 flex items-start justify-between">
                           <div className="flex-1 min-w-0">
@@ -870,7 +884,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {filteredProperties.map((property) => (
+                          {paginatedProperties.map((property) => (
                             <tr key={property.id} className={`transition-colors hover:bg-gray-50/50 ${selectedProperty?.id === property.id ? "bg-emerald-50/30" : ""}`}>
                               <td className="px-5 py-4">
                                 <button onClick={() => setSelectedProperty(selectedProperty?.id === property.id ? null : property)} className="text-left">
@@ -916,6 +930,58 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </>
+              )}
+
+              {/* Pagination */}
+              {!loading && filteredProperties.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-5 py-3">
+                  <p className="text-sm text-gray-500">
+                    Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{Math.min(page * PAGE_SIZE, filteredProperties.length)} of {filteredProperties.length}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:bg-white hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      ← Prev
+                    </button>
+                    {/* Page numbers */}
+                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                      // Show pages around current page
+                      let pageNum: number;
+                      if (totalPages <= 7) {
+                        pageNum = i + 1;
+                      } else if (page <= 4) {
+                        pageNum = i + 1;
+                      } else if (page >= totalPages - 3) {
+                        pageNum = totalPages - 6 + i;
+                      } else {
+                        pageNum = page - 3 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          className={`min-w-[2rem] rounded-lg px-2 py-1.5 text-sm font-semibold transition-all ${
+                            page === pageNum
+                              ? "bg-emerald-600 text-white shadow-sm"
+                              : "text-gray-600 hover:bg-white hover:border-gray-300"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page >= totalPages}
+                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:bg-white hover:border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
 
