@@ -40,6 +40,7 @@ interface MapContainerProps {
   onMapClick: (lngLat: GeoLocation) => void;
   onMarkerClick?: (property: Property) => void;
   markerOpacity?: number;
+  filterOpacityMap?: Record<string, number>;
 }
 
 const MapContainer = forwardRef<MapContainerHandle, MapContainerProps>(
@@ -52,6 +53,7 @@ const MapContainer = forwardRef<MapContainerHandle, MapContainerProps>(
       onMapClick,
       onMarkerClick,
       markerOpacity = 1,
+      filterOpacityMap = {},
     },
     ref
   ) => {
@@ -177,6 +179,7 @@ const MapContainer = forwardRef<MapContainerHandle, MapContainerProps>(
               properties={properties}
               onMarkerClick={onMarkerClick}
               markerOpacity={markerOpacity}
+              filterOpacityMap={filterOpacityMap}
             />
           )}
         </Map>

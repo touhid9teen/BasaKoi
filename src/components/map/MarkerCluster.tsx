@@ -9,6 +9,8 @@ interface MarkerClusterProps {
   properties: Property[];
   onMarkerClick?: (property: Property) => void;
   markerOpacity?: number;
+  filterOpacityMap?: Record<string, number>;
+  showPriceLabels?: boolean;
 }
 
 interface ClusterPointProperties {
@@ -28,7 +30,21 @@ interface MarkerPointProperties {
 
 type PointProperties = ClusterPointProperties | MarkerPointProperties;
 
-export default function MarkerCluster({ properties, onMarkerClick, markerOpacity = 1 }: MarkerClusterProps) {
+function formatPrice(amount: number): string {
+  if (amount >= 1000) {
+    const k = Math.round(amount / 1000);
+    return `${k}k`;
+  }
+  return `${amount}`;
+}
+
+export default function MarkerCluster({
+  properties,
+  onMarkerClick,
+  markerOpacity = 1,
+  filterOpacityMap = {},
+  showPriceLabels = true,
+}: MarkerClusterProps) {
   const { current: map } = useMap();
 
   const supercluster = useMemo(() => {
@@ -99,7 +115,12 @@ export default function MarkerCluster({ properties, onMarkerClick, markerOpacity
             >
               <div
                 className="flex items-center justify-center rounded-full bg-emerald-600/90 text-white text-xs font-bold shadow-lg shadow-emerald-900/30 backdrop-blur-sm transition-all hover:scale-110 hover:bg-emerald-500 cursor-pointer border-2 border-white/30"
-                style={{ width: size, height: size, opacity: markerOpacity, transition: "opacity 0.3s ease" }}
+                style={{
+                  width: size,
+                  height: size,
+                  opacity: markerOpacity,
+                  transition: "opacity 0.3s ease",
+                }}
               >
                 {props.point_count_abbreviated}
               </div>
@@ -108,6 +129,8 @@ export default function MarkerCluster({ properties, onMarkerClick, markerOpacity
         }
 
         const property = props.property;
+        const individualOpacity = filterOpacityMap[property.id] ?? markerOpacity;
+
         return (
           <Marker
             key={`marker-${property.id || idx}`}
@@ -116,23 +139,30 @@ export default function MarkerCluster({ properties, onMarkerClick, markerOpacity
             onClick={() => onMarkerClick?.(property)}
           >
             <button
-              className="group relative flex items-center justify-center"
+              className="group relative flex flex-col items-center"
               title={property.title}
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkerClick?.(property);
               }}
-              style={{ opacity: markerOpacity, transition: "opacity 0.3s ease" }}
+              style={{ opacity: individualOpacity, transition: "opacity 0.3s ease" }}
             >
-              <div className="absolute -bottom-1 left-1/2 h-2 w-4 -translate-x-1/2 rounded-full bg-black/20 blur-sm" />
-              <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md transition-transform hover:scale-125 hover:bg-emerald-400">
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
-                </svg>
-              </div>
-              <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs text-white shadow-lg group-hover:block">
-                ৳{property.rent_amount?.toLocaleString("en-BD")}
-              </div>
+              {/* Price label pin — larger, bolder, more visible */}
+              {showPriceLabels ? (
+                <div className="flex items-center gap-1 rounded-full bg-emerald-600 px-3.5 py-1.5 text-sm font-extrabold text-white shadow-lg ring-2 ring-white drop-shadow-md transition-all hover:scale-125 hover:bg-emerald-500 hover:shadow-xl">
+                  <span className="text-emerald-200 text-xs">৳</span>
+                  <span className="tracking-tight">{formatPrice(property.rent_amount || 0)}</span>
+                </div>
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition-transform hover:scale-125 hover:bg-emerald-400">
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
+                  </svg>
+                </div>
+              )}
+
+              {/* Pointer arrow — thicker */}
+              <div className="h-2 w-2 rotate-45 rounded-sm bg-emerald-600 -mt-1 shadow-sm" />
             </button>
           </Marker>
         );
