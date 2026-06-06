@@ -126,19 +126,7 @@ export default function AddRentOverlay({
   const rentInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (step === 4) {
-      const t = setTimeout(() => rentInputRef.current?.focus(), 300);
-      return () => clearTimeout(t);
-    }
-  }, [step]);
-
-  useEffect(() => {
-    if (step === 7) {
-      const t = setTimeout(() => phoneInputRef.current?.focus(), 300);
-      return () => clearTimeout(t);
-    }
-  }, [step]);
+  // Removed auto-focus on step changes — was causing unwanted keyboard popup on Android.
 
   useEffect(() => {
     if (step === 2 && accommodationType) {
@@ -331,7 +319,6 @@ export default function AddRentOverlay({
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="Search area (Banani, Gulshan...)"
                   className={inputBase + " " + inputBorder + " pl-10"}
-                  autoFocus
                 />
               </div>
               <button

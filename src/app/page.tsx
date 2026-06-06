@@ -371,7 +371,6 @@ export default function Home() {
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Search area (Mirpur 10, Dhanmondi...)"
               className="flex-1 border-0 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
-              autoFocus
             />
             <button
               onClick={handleFindNearMe}
